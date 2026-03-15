@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.database.database import get_db
 from app.models.models import User
 from app.schemas.schemas import UserCreate, UserResponse, Token
-from app.auth.utils import get_password_hash, verify_password, create_access_token
+from app.auth.utils import get_password_hash, verify_password, create_access_token, get_current_user
 from app.core.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -66,15 +66,12 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.get("/me", response_model=UserResponse)
-def get_me(current_user: User = Depends(get_current_active_user_wrapper)):
-    return current_user
-
-
-def get_current_active_user_wrapper(current_user: User = Depends(get_current_user_depends)):
+def get_current_active_user_wrapper(current_user: User = Depends(get_current_user)):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
 
 
-from app.auth.utils import get_current_user as get_current_user_depends
+@router.get("/me", response_model=UserResponse)
+def get_me(current_user: User = Depends(get_current_active_user_wrapper)):
+    return current_user
