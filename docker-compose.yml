@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: splitwise-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: splitwise
+      MYSQL_USER: splitwise
+      MYSQL_PASSWORD: splitwise_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+    networks:
+      - splitwise-network
+
+  # Backend FastAPI
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: splitwise-backend
+    restart: always
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./backend/uploads:/app/backend/uploads
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - splitwise-network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  splitwise-network:
+    driver: bridge

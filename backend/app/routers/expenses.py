@@ -10,6 +10,7 @@ from app.schemas.schemas import (
 )
 from app.auth.utils import get_current_active_user
 from app.services.balance_service import calculate_group_balances
+from app.core.config import settings
 import os
 import aiofiles
 import uuid
@@ -181,7 +182,7 @@ async def upload_receipt(
     
     file_ext = os.path.splitext(file.filename)[1]
     unique_filename = f"{uuid.uuid4()}{file_ext}"
-    file_path = os.path.join("backend/uploads", unique_filename)
+    file_path = os.path.join(settings.UPLOAD_DIR, unique_filename)
     
     async with aiofiles.open(file_path, 'wb') as f:
         content = await file.read()
